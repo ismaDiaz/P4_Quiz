@@ -1,7 +1,7 @@
 // JavaScript source code
 
 const Sequelize = require('sequelize');
-const { log, biglog, colorize, errorlog } = require("./out");
+const {log, biglog, colorize, errorlog} = require("./out");
 const {models} = require('./model');
 
 exports.helpCmd = rl => {
@@ -56,7 +56,7 @@ exports.showCmd = (rl, id) => {
         if(!quiz) {
             throw new Error(`No existe un quiz asociado al id=${id}.`);
         }
-        log(`[$colorize(quiz.id, 'magenta')}]: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`);
+        log(` [${colorize(quiz.id, 'magenta')}]: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`);
     })
     .catch(error => {
         errorlog(error.message);
@@ -189,106 +189,54 @@ exports.testCmd = (rl,id) => {
 
 
 
-  
-//    if (typeof id === "undefined") {
-//      errorlog(`Falta el par�metro id.`);
-//    rl.prompt();
-//    } else {
-//        try {
-//            const quiz = model.getByIndex(id);
-//         
-//        rl.question(colorize(quiz.question + "?" + "", 'red'), answer => {
-//
-//              if (answer.trim().toLowerCase() === quiz.answer.trim().toLowerCase() ) {
-//                log('Su respuesta es:', 'black');
-//              log('CORRECTA', 'green');
-//            rl.prompt();
-//      } else {
-//        log('Su respuesta es:', 'black');
-//      log('INCORRECTA', 'red');
-//    rl.prompt();
-//    }
-//    });
-//      } catch (error) {
-//        errorlog(error.message);
-//      rl.prompt();
-//}
-//    }
-
-//};
-const playOne = (toBeResolved,score) => {
-    return new Sequelize.Promise((resolve,reject) => {
-        if( toBeResolved.length === 0){
-            log('No hay m�s preguntas.', 'black');
-            log('Fin del examen. Aciertos:', 'black');
-            log(score, 'green');
-        }else{
-            let id = Math.round(Math.random() * ((toBeResolved.length)-1));
-            const quiz = model.getByIndex(toBeResolved[id]);
-            let elementosEliminados = toBeResolved.splice(id, 1);
-            rl.question(quiz.question+'?'+'', resp => {
-               if (resp.trim().toLowerCase() === quiz.answer.trim().toLowerCase()) {
-                score = score + 1;
-                log(`CORRECTO - Lleva ${colorize(score, 'magenta')} aciertos.`);
-                resolve(playOne(toBeResolved,score));
-               } else {
-                log('INCORRECTO.', 'black');
-                log('Fin del examen. Aciertos:', 'black');
-                log(score, 'green');
-               }
-            });
-        }
-    });
-};
 
 exports.playCmd = rl => {
     let score = 0;
     let toBeResolved = [];
-    for (let i = 1; i < models.quiz.count ; i++) {
-        toBeResolved.push(i);
-    }                                                 
-    playOne(toBeResolved,score)
-    .catch(error => {
-        errorlog(error.message);
+    const playOne = () => {
+        return new Promise((resolve,reject) => {
+            if( toBeResolved.length === 0){
+                log('No hay m�s preguntas.', 'black');
+                log('Fin del examen. Aciertos:', 'black');
+                log(score, 'green');
+                resolve();
+                return;
+            }else{
+                try{
+                    let id = Math.round(Math.random() * ((toBeResolved.length)-1));
+                    const quiz = toBeResolved[id];
+                    let elementosEliminados = toBeResolved.splice(id, 1);
+                    MakeQuestion(rl,quiz.question)
+                    .then(answer => {
+                    if (resp.trim().toLowerCase() === quiz.answer.trim().toLowerCase()) {
+                        score = score + 1;
+                        log(`CORRECTO - Lleva ${colorize(score, 'magenta')} aciertos.`);
+                        resolve(playOne());
+                    } else {
+                        log('INCORRECTO.', 'black');
+                        log('Fin del examen. Aciertos:', 'black');
+                        log(score, 'green');
+                        rl.prompt();
+                   }
+                    })
+                }catch(error){
+                    errorlog(error.message);
+                    rl.prompt();
+                }
+            }
+        })
+    }
+    models.quiz.findAll({raw: true})
+    .then(quizzes => {
+        toBePlayed = quizzes;
+    })                                                 
+    .then(() => {
+        return playOne()
     })
     .then(() => {
         rl.prompt();
     });
 };
-
-
-
- //   let score = 0;
- //   let toBeResolved = [];
- //   for (let i = 0; i < model.count(); i++) {
- //       toBeResolved.push(i);
- //   }
- //   const playOne = () => {
- //       if (toBeResolved.length === 0) {
- //           log('No hay m�s preguntas.', 'black');
- //           log('Fin del examen. Aciertos:', 'black');
- //           log(score, 'green');
- //           rl.prompt();
- //       } else {
- //           let id = Math.round(Math.random() * ((toBeResolved.length)-1));
- //           const quiz = model.getByIndex(toBeResolved[id]);
- //           let elementosEliminados = toBeResolved.splice(id, 1);
- //           rl.question(quiz.question+'?'+'', resp => {
- //               if (resp.trim().toLowerCase() === quiz.answer.trim().toLowerCase()) {
- //                   score = score + 1;
- //                   log(`CORRECTO - Lleva ${colorize(score, 'magenta')} aciertos.`);
- //                   playOne();
- //               } else {
- //                   log('INCORRECTO.', 'black');
- //                   log('Fin del examen. Aciertos:', 'black');
- //                   log(score, 'green');
- //                   rl.prompt();
- //               }
- //           });
-//      }
-//  };
-//    playOne();
-//};
 
 exports.creditsCmd = rl => {
     log(" Autores de la pr�ctica:");
