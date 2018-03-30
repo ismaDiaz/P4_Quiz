@@ -1,6 +1,7 @@
 // JavaScript source code
 const figlet = require('figlet');
 const chalk = require('chalk');
+const net = require('net');
 
 const colorize = (msg, color) => {
     if (typeof color !== "undefined") {
@@ -14,7 +15,7 @@ const log = (socket, msg, color) => {
 };
 
 const biglog = (socket, msg, color) => {
-    log(figlet.textSync(msg, { horizontalLayout: 'full' }), color);
+    log(socket, figlet.textSync(msg, { horizontalLayout: 'full' }), color);
 };
 
 const errorlog = (socket, emsg) => {

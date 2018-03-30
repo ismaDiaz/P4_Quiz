@@ -3,6 +3,7 @@
 const Sequelize = require('sequelize');
 const {log, biglog, colorize, errorlog} = require("./out");
 const {models} = require('./model');
+const net = require("net");
 
 exports.helpCmd = (socket, rl) => {
     log(socket, "Comandos:");
@@ -33,7 +34,7 @@ exports.listCmd = (socket, rl) => {
     });
 };
 
-const validateId = id => {
+const validateId = (id) => {
     return new Sequelize.Promise((resolve, reject) => {
         if(typeof id === "undefined") {
             reject(new Error(`Falta el parametro <id>.`));
@@ -49,7 +50,7 @@ const validateId = id => {
 };
 
 
-exports.showCmd = (rl, id) => {
+exports.showCmd = (socket, rl, id) => {
     validateId(id)
     .then(id => models.quiz.findById(id))
     .then(quiz => {
@@ -78,7 +79,7 @@ const makeQuestion = (rl, text) => {
 
 
 
-exports.addCmd = rl => {
+exports.addCmd = (socket,rl) => {
     makeQuestion(rl, 'Introduzca pregunta: ')
     .then(q => {
         return makeQuestion(rl, 'Introduzca la respuesta: ')
@@ -105,7 +106,7 @@ exports.addCmd = rl => {
 };
 
 
-exports.deleteCmd = (rl,id) => {
+exports.deleteCmd = (socket, rl,id) => {
     validateId(id)
     .then(id => models.quiz.destroy({where: {id}}))
     .catch(error => {
@@ -117,7 +118,7 @@ exports.deleteCmd = (rl,id) => {
 };
 
 
-exports.editCmd = (rl,id) => {
+exports.editCmd = (socket, rl,id) => {
     validateId(id)
     .then(id => models.quiz.findById(id))
     .then(quiz => {
@@ -157,7 +158,7 @@ exports.editCmd = (rl,id) => {
 };
 
 
-exports.testCmd = (rl,id) => {
+exports.testCmd = (socket, rl,id) => {
     validateId(id)
     .then( id => models.quiz.findById(id))
     .then( quiz => {
@@ -190,7 +191,7 @@ exports.testCmd = (rl,id) => {
 
 
 
-exports.playCmd = rl => {
+exports.playCmd = (socket, rl) => {
     let score = 0;
     let toBeResolved = [];
     const playOne = () => {
@@ -238,14 +239,14 @@ exports.playCmd = rl => {
     });
 };
 
-exports.creditsCmd = rl => {
+exports.creditsCmd = (socket, rl) => {
     log(socket, " Autores de la pr�ctica:");
     log(socket, 'Ismael Diaz Molina', 'green');
     rl.prompt();
 };
 
 
-exports.quitCmd = rl => {
+exports.quitCmd = (socket, rl) => {
     rl.close();
     socket.end();
 };
